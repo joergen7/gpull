@@ -7,11 +7,11 @@
 
 ### Pulling Changes
 
-This command line tool updates (or clones if necessary) a possibly large number of git repositories from different sources by entering
+This command line tool updates (or clones if necessary) a possibly large number of git repositories from different sources by entering on the command line:
 
     gpull
 
-on the command line. This results in an output that looks like this:
+This results in an output that looks like this:
 
     =====================================
     repo:   variant_call_rna
@@ -46,11 +46,11 @@ The base URL string is prepended to each repository name to build the repository
 
 ### Surveying Repository Statuses
 
-In addition it is possible to detect which local repositories have changed by entering
+In addition it is possible to detect which local repositories have changed by entering on the command line:
 
     gpull status
 
-on the command line. This results in an output that looks like this:
+This results in an output that looks like this:
 
     =====================================
     repo:   gpull
