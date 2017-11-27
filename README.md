@@ -1,7 +1,7 @@
 # gpull
 ###### A git repository management tool.
 
-[![hex.pm](https://img.shields.io/hexpm/v/gpull.svg?style=flat-square)](https://hex.pm/packages/gpull) [![Build Status](https://travis-ci.org/joergen7/gpull.svg?branch=master)](https://travis-ci.org/joergen7/gpull)
+[![Build Status](https://travis-ci.org/joergen7/gpull.svg?branch=master)](https://travis-ci.org/joergen7/gpull)
 
 This command line tool updates (or clones if necessary) a possibly large number of git repositories from different sources by entering
 
