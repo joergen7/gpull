@@ -31,6 +31,16 @@ In addition it is possible to detect which local repositories have changed by en
 
 on the command line. A notification is generated only for repositories that contain uncommitted changes.
 
+## Building with Rebar3
+
+Build the command line tool by entering
+
+    rebar3 escriptize
+
+Install the resulting script by copying it to a location in the executable path, e.g., by entering
+
+    sudo cp _build/default/bin/gpull /usr/local/bin
+
 ## System Requirements
 
 - Erlang OTP 18.0 or higher
