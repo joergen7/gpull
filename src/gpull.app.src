@@ -1,0 +1,15 @@
+{application, gpull,
+ [{description, "A git repository management tool."},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[]},
+  {modules, [gpull]},
+
+  {maintainers, ["Jorgen Brandt"]},
+  {licenses, ["Apache 2.0"]},
+  {links, [{"GitHub", "https://github.com/joergen7/gpull/"}]}
+ ]}.
