@@ -43,8 +43,8 @@ Install the resulting script by copying it to a location in the executable path,
 
 ## System Requirements
 
-- Erlang OTP 18.0 or higher
-- Rebar3 3.0.0 or higher
+- [Erlang](http://www.erlang.org/) OTP 18.0 or higher
+- [Rebar3](https://www.rebar3.org/) 3.0.0 or higher
 
 ## Authors
 
