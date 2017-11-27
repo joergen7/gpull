@@ -3,11 +3,30 @@
 
 [![Build Status](https://travis-ci.org/joergen7/gpull.svg?branch=master)](https://travis-ci.org/joergen7/gpull)
 
+## Usage
+
+### Pulling Changes
+
 This command line tool updates (or clones if necessary) a possibly large number of git repositories from different sources by entering
 
     gpull
 
-on the command line. The repository information is drawn from a file `repo_info.json` which is expected in the current working directory.
+on the command line. This results in an output that looks like this:
+
+    =====================================
+    repo:   variant_call_rna
+    URL:    https://github.com/joergen7/variant_call_rna.git
+    action: git pull
+    Already up-to-date.
+    =====================================
+    repo:   wordcount
+    URL:    https://github.com/joergen7/wordcount.git
+    action: git pull
+    Already up-to-date.
+
+### The Repository Information File
+
+The repository information is drawn from a file `repo_info.json` which is expected in the current working directory.
 
 The `repo_info.json` file contains a JSON object associating a base URL string with a list of repository name strings. E.g., the following JSON object is a valid repo info object:
 
@@ -25,11 +44,27 @@ The `repo_info.json` file contains a JSON object associating a base URL string w
 
 The base URL string is prepended to each repository name to build the repository URL.
 
+### Surveying Repository Statuses
+
 In addition it is possible to detect which local repositories have changed by entering
 
     gpull status
 
-on the command line. A notification is generated only for repositories that contain uncommitted changes.
+on the command line. This results in an output that looks like this:
+
+    =====================================
+    repo:   gpull
+    On branch master
+    Your branch is up-to-date with 'origin/master'.
+    Changes not staged for commit:
+      (use "git add <file>..." to update what will be committed)
+      (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   README.md
+
+    no changes added to commit (use "git add" and/or "git commit -a")
+
+A notification is generated only for repositories that contain uncommitted changes.
 
 ## Building with Rebar3
 
