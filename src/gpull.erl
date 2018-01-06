@@ -83,14 +83,17 @@ load_repo_info( InfoFile ) when is_list( InfoFile ) ->
   end.
 
 
-git_pull( BaseUrl, RepoName )
-when is_binary( BaseUrl ),
-     is_binary( RepoName ) ->
+git_pull( Prefix, Suffix )
+when is_binary( Prefix ),
+     is_binary( Suffix ) ->
+
+  RepoUrl = string:join( [binary_to_list( Prefix ), binary_to_list( Suffix )], "/" ),
+  [$/|RepoName] = string:find( RepoUrl, "/", trailing ),
+
 
   io:format( "=====================================~n" ),
   io:format( "repo:   ~s~n", [RepoName] ),
 
-  RepoUrl = <<BaseUrl/binary, "/", RepoName/binary, ".git">>,
 
   io:format( "URL:    ~s~n", [RepoUrl] ),
 
@@ -99,24 +102,26 @@ when is_binary( BaseUrl ),
 
       true ->
         io:format( "action: git pull~n" ),
-        <<"(cd ", RepoName/binary, "; git pull)">>;
+        "(cd "++RepoName++"; git pull)";
 
       false ->
         io:format( "action: git clone~n" ),
-        <<"git clone ", RepoUrl/binary>>
+        "git clone "++RepoUrl
 
     end,
 
-  Reply = os:cmd( binary_to_list( Cmd ) ),
+  Reply = os:cmd( Cmd ),
   io:format( Reply ).
 
-git_status( BaseUrl, RepoName )
-when is_binary( BaseUrl ),
-     is_binary( RepoName ) ->
+git_status( Prefix, Suffix )
+when is_binary( Prefix ),
+     is_binary( Suffix ) ->
 
+  RepoUrl = string:join( [binary_to_list( Prefix ), binary_to_list( Suffix )], "/" ),
+  [$/|RepoName] = string:find( RepoUrl, "/", trailing ),
 
-  Cmd = <<"(cd ", RepoName/binary, "; git status)">>,
-  Reply = os:cmd( binary_to_list( Cmd ) ),
+  Cmd = "(cd "++RepoName++"; git status)",
+  Reply = os:cmd( Cmd ),
   
   case string:find( Reply, ?DEFAULTREPLY ) of
 
