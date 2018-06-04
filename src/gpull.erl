@@ -87,8 +87,10 @@ git_pull( Prefix, Suffix )
 when is_binary( Prefix ),
      is_binary( Suffix ) ->
 
-  RepoUrl = string:join( [binary_to_list( Prefix ), binary_to_list( Suffix )], "/" ),
-  [$/|RepoName] = string:find( RepoUrl, "/", trailing ),
+  RepoUrl0 = string:join( [binary_to_list( Prefix ), binary_to_list( Suffix )], "/" ),
+  [$/|RepoName] = string:find( RepoUrl0, "/", trailing ),
+
+  RepoUrl = RepoUrl0++".git",
 
 
   io:format( "=====================================~n" ),
