@@ -1,6 +1,6 @@
 {application, gpull,
- [{description, "A git repository management tool."},
-  {vsn, "0.1.0"},
+ [{description, "git repository management tool"},
+  {vsn, "0.1.1"},
   {registered, []},
   {applications,
    [kernel,
