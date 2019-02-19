@@ -83,7 +83,7 @@ Install the resulting script by copying it to a location in the executable path,
 
 ## Authors
 
-- Jörgen Brandt ([@joergen7](https://github.com/joergen7/)) [joergen.brandt@onlinehome.de](mailto:joergen.brandt@onlinehome.de)
+- Jörgen Brandt ([@joergen7](https://github.com/joergen7/)) [joergen@cuneiform-lang.org](mailto:joergen@cuneiform-lang.org)
 
 ## License
 

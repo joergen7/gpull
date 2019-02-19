@@ -1,6 +1,6 @@
 %% -*- erlang -*-
 %%
-%% A git repository management tool.
+%% gpull: git repository management tool.
 %%
 %% Copyright 2017-2019 Jörgen Brandt <joergen@cuneiform-lang.org>
 %%
