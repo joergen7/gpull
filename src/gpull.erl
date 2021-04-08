@@ -2,7 +2,7 @@
 %%
 %% gpull: git repository management tool.
 %%
-%% Copyright 2017-2019 Jörgen Brandt <joergen@cuneiform-lang.org>
+%% Copyright 2017-2021 Jörgen Brandt <joergen@cuneiform-lang.org>
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 %%
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen@cuneiform-lang.org>
-%% @version 0.1.2
-%% @copyright 2017-2019
+%% @version 0.1.3
+%% @copyright 2017-2021
 %%
 %% @end
 %% -------------------------------------------------------------------
@@ -231,4 +231,4 @@ when is_list( RepoName ),
   io:format( "action: ~s~n", [Action] ),
   lists:foreach( fun( {K, V} ) -> print_info( K, V ) end,
                  maps:to_list( InfoMap ) ),
-  io:format( Reply ).
+  io:format( [Reply] ).
