@@ -152,7 +152,7 @@ when is_binary( Prefix ),
         {"git pull", "(cd "++RepoName++"; git pull)"};
 
       false ->
-        {"git clone", "git clone "++RepoUrl++"; git config pull.rebase false"}
+        {"git clone", "git clone "++RepoUrl++"; (cd "++RepoName++"; git config pull.rebase false)"}
     end,
 
   InfoMap = #{ "URL" => RepoUrl },
