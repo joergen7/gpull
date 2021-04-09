@@ -139,7 +139,7 @@ when Op :: pull | status,
      M  :: repo_obj().
 
 process_repo( Op, #{ protocol := P, url := BaseUrl, repo_list := RepoLst} ) ->
-  F = proc_repo( binary_to_atom( P ), Op, BaseUrl ),
+  F = proc_repo( binary_to_atom( P, utf8 ), Op, BaseUrl ),
   lists:foreach( F, RepoLst ).
 
 
