@@ -30,10 +30,11 @@ The repository information is drawn from a file `repo_info.json` which is expect
 
 The `repo_info.json` file contains a JSON object associating a base URL string with a list of repository name strings. E.g., the following JSON object is a valid repo info object:
 
-    {
-      "git@github.com:joergen7" :
-        ["bismark", "bsmooth-align", "gpull"]
-    }
+    [
+      { "protocol"  : "git",
+        "url"       : "git@github.com:joergen7",
+        "repo_list" : ["bismark", "bsmooth-align", "gpull"] }
+    ]
 
 The base URL string is prepended to each repository name to build the repository URL.
 

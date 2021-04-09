@@ -32,6 +32,10 @@
 -define( CLEAN_REPLY1, "nothing to commit, working tree clean" ).
 -define( CLEAN_REPLY2, "Your branch is up to date with" ).
 
+-type repo_obj() :: #{ protocol  => binary(),
+                       url       => binary(),
+                       repo_list => [binary()] }.
+
 %%====================================================================
 %% Escript main function
 %%====================================================================
@@ -45,16 +49,12 @@ when is_list( ArgLst ) ->
 
   Op =
     case ArgLst of
-      []         -> fun git_pull/2;
-      ["status"] -> fun git_status/2
+      []         -> pull;
+      ["status"] -> status
     end,
 
-  F =
-    fun( {BaseUrl, RepoLst} ) ->
-      process_repo_lst( Op, BaseUrl, RepoLst )
-    end,
 
-  lists:foreach( F, maps:to_list( RepoInfo ) ).
+  lists:foreach( fun( Repo ) -> process_repo( Op, Repo ) end, RepoInfo ).
 
 
 %%====================================================================
@@ -84,25 +84,40 @@ validate_json_string_list( BLst ) ->
   error( {bad_json_string_list, BLst} ).
 
 
--spec validate_json_map( M :: _ ) ->
-  #{ binary() => [binary()] }.
+-spec validate_json_repo_obj( M :: _ ) -> repo_obj().
 
-validate_json_map( M )
-when is_map( M ) ->
-  lists:foreach( fun validate_json_string/1,
-                 maps:keys( M ) ),
-  lists:foreach( fun validate_json_string_list/1,
-                 maps:values( M ) ),
+validate_json_repo_obj( M = #{ protocol := P, url := U, repo_list := RLst } ) ->
+  
+  case P of
+    <<"git">> -> ok;
+    <<"svn">> -> ok;
+    _         -> error( {bad_protocol, P} )
+  end,
+
+  validate_json_string( U ),
+  validate_json_string_list( RLst ),
+
   M;
 
-validate_json_map( M ) ->
-  error( {bad_json_map, M} ).
+validate_json_repo_obj( M ) ->
+  error( {bad_json_repo_object, M} ).
+
+
+-spec validate_json_repo_obj_list( L :: _ ) -> [repo_obj()].
+
+validate_json_repo_obj_list( L )
+when is_list( L ) ->
+  lists:foreach( fun validate_json_repo_obj/1, L ),
+  L;
+
+validate_json_repo_obj_list( L ) ->
+  error( {bad_json_repo_obj_list, L} ).
+
 
 
 %% File I/O ----------------------------------------------------------
 
--spec load_repo_info( InfoFile :: string() ) ->
-  #{ binary() => [binary()] }.
+-spec load_repo_info( InfoFile :: string() ) -> [repo_obj()].
 
 load_repo_info( InfoFile ) when is_list( InfoFile ) ->
 
@@ -112,31 +127,54 @@ load_repo_info( InfoFile ) when is_list( InfoFile ) ->
       error( Reason );
 
     {ok, B} ->
-      validate_json_map( jsone:decode( B ) )
+      validate_json_repo_obj_list( jsone:decode( B, [{keys, atom}] ) )
 
   end.
 
 
 %% Generic repo processor --------------------------------------------
 
--spec process_repo_lst( Op, BaseUrl, RepoLst ) -> ok
-when Op      :: fun( ( Prefix :: binary(), Suffix :: binary() ) -> ok ),
-     BaseUrl :: binary(),
-     RepoLst :: [binary()].
+-spec process_repo( Op, M ) -> ok
+when Op :: pull | status,
+     M  :: repo_obj().
 
-process_repo_lst( Op, BaseUrl, RepoLst )
-when is_function( Op, 2 ),
-     is_binary( BaseUrl ),
-     is_list( RepoLst ) ->
-
-  F = fun( RepoName ) ->
-        Op( BaseUrl, RepoName )
-      end,
-
+process_repo( Op, #{ protocol := P, url := BaseUrl, repo_list := RepoLst} ) ->
+  F = proc_repo( binary_to_atom( P ), Op, BaseUrl ),
   lists:foreach( F, RepoLst ).
 
 
+-spec proc_repo( Protocol, Op, BaseUrl ) -> fun( ( Repo :: binary() ) -> ok )
+when Protocol :: git | svn,
+     Op       :: pull | status,
+     BaseUrl  :: binary().
+
+proc_repo( git, pull, BaseUrl ) ->
+  fun( Repo ) ->
+    git_pull( BaseUrl, Repo )
+  end;
+
+proc_repo( git, status, BaseUrl ) ->
+  fun( Repo ) ->
+    git_status( BaseUrl, Repo )
+  end;
+
+proc_repo( svn, pull, BaseUrl ) ->
+  fun( Repo ) ->
+    svn_up( BaseUrl, Repo )
+  end;
+
+proc_repo( svn, status, BaseUrl ) ->
+  fun( Repo ) ->
+    svn_status( BaseUrl, Repo )
+  end.
+
+
+
 %% Repo operations ---------------------------------------------------
+
+-spec git_pull( Prefix, Suffix ) -> ok
+when Prefix :: binary(),
+     Suffix :: binary().
 
 git_pull( Prefix, Suffix )
 when is_binary( Prefix ),
@@ -159,7 +197,14 @@ when is_binary( Prefix ),
 
   Reply = os:cmd( Cmd ),
 
-  print_reply( RepoName, Action, InfoMap, Reply ).
+  ok =
+    print_reply( RepoName, Action, InfoMap, Reply ),
+
+  ok.
+
+-spec git_status( Prefix, Suffix ) -> ok
+when Prefix :: binary(),
+     Suffix :: binary().
 
 git_status( Prefix, Suffix )
 when is_binary( Prefix ),
@@ -180,6 +225,20 @@ when is_binary( Prefix ),
         _       -> ok
       end
   end.
+
+-spec svn_up( Prefix, Suffix ) -> ok
+when Prefix :: binary(),
+     Suffix :: binary().
+
+svn_up( Prefix, Suffix ) ->
+  error( nyi ).
+
+-spec svn_status( Prefix, Suffix ) -> ok
+when Prefix :: binary(),
+     Suffix :: binary().
+
+svn_status( Prefix, Suffix ) ->
+  error( nyi ).
 
 %% Helper functions --------------------------------------------------
 
@@ -231,4 +290,4 @@ when is_list( RepoName ),
   io:format( "action: ~s~n", [Action] ),
   lists:foreach( fun( {K, V} ) -> print_info( K, V ) end,
                  maps:to_list( InfoMap ) ),
-  io:format( [Reply] ).
+  io:put_chars( Reply ).

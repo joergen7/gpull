@@ -1,0 +1,5 @@
+[
+  { "protocol"  : "git",
+    "url"       : "git@github.com:joergen7",
+    "repo_list" : ["bismark", "bsmooth-align", "gpull"] }
+]
