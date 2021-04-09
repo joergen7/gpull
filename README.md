@@ -28,12 +28,21 @@ This results in an output that looks like this:
 
 The repository information is drawn from a file `repo_info.json` which is expected in the current working directory.
 
-The `repo_info.json` file contains a JSON object associating a base URL string with a list of repository name strings. E.g., the following JSON object is a valid repo info object:
+The `repo_info.json` file contains a list of JSON objects that each contain three keys: `protocol`, `url`, and `repo_list`. The protocol can be either `git` or `svn`. The base URL and repository list identify the repositories to be managed. Herein, the base URL and repo entry are joined with a `/` separator. The following is a valid `repo_info.json` file:
 
     [
       { "protocol"  : "git",
         "url"       : "git@github.com:joergen7",
-        "repo_list" : ["bismark", "bsmooth-align", "gpull"] }
+        "repo_list" : ["bismark",
+                       "bsmooth-align",
+                       "gpull"] },
+      { "protocol"  : "git",
+        "url"       : "https://github.com",
+        "repo_list" : ["sile/jsone",
+                       "jcomellas/getopt"] },
+      { "protocol"  : "svn",
+        "url"       : "https://svn.win.tue.nl/repos",
+        "repo_list" : ["cpntools/GUI/trunk"] }
     ]
 
 The base URL string is prepended to each repository name to build the repository URL.

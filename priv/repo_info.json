@@ -1,5 +1,14 @@
 [
   { "protocol"  : "git",
     "url"       : "git@github.com:joergen7",
-    "repo_list" : ["bismark", "bsmooth-align", "gpull"] }
+    "repo_list" : ["bismark",
+                   "bsmooth-align",
+                   "gpull"] },
+  { "protocol"  : "git",
+    "url"       : "https://github.com",
+    "repo_list" : ["sile/jsone",
+                   "jcomellas/getopt"] },
+  { "protocol"  : "svn",
+    "url"       : "https://svn.win.tue.nl/repos",
+    "repo_list" : ["cpntools/GUI/trunk"] }
 ]

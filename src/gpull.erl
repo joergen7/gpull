@@ -181,26 +181,23 @@ when is_binary( Prefix ),
      is_binary( Suffix ) ->
 
   RepoName = get_repo_name( Prefix, Suffix ),
-  RepoUrl = get_repo_url( Prefix, Suffix ),
+  RepoUrl = get_repo_url( Prefix, Suffix, <<".git">> ),
 
   {Action, Cmd} =
     case filelib:is_dir( RepoName ) of
 
       true ->
-        {"git pull", "(cd "++RepoName++"; git pull)"};
+        {"git pull", "(cd "++RepoName++" && git pull)"};
 
       false ->
-        {"git clone", "git clone "++RepoUrl++"; (cd "++RepoName++"; git config pull.rebase false)"}
+        {"git clone", "git clone "++RepoUrl++" && (cd "++RepoName++" && git config pull.rebase false)"}
     end,
 
   InfoMap = #{ "URL" => RepoUrl },
 
   Reply = os:cmd( Cmd ),
 
-  ok =
-    print_reply( RepoName, Action, InfoMap, Reply ),
-
-  ok.
+  print_reply( RepoName, Action, InfoMap, Reply ).
 
 -spec git_status( Prefix, Suffix ) -> ok
 when Prefix :: binary(),
@@ -212,7 +209,7 @@ when is_binary( Prefix ),
 
   RepoName = get_repo_name( Prefix, Suffix ),
 
-  Cmd = "(cd "++RepoName++"; git status)",
+  Cmd = "(cd "++RepoName++" && git status)",
   Reply = os:cmd( Cmd ),
   Action = "git status",
   
@@ -231,14 +228,43 @@ when Prefix :: binary(),
      Suffix :: binary().
 
 svn_up( Prefix, Suffix ) ->
-  error( nyi ).
+  
+  RepoName = get_repo_name( Prefix, Suffix ),
+  RepoUrl = get_repo_url( Prefix, Suffix, <<>> ),
+
+  {Action, Cmd} =
+  case filelib:is_dir( RepoName ) of
+
+    true ->
+      {"svn up", "(cd "++RepoName++" && svn up)"};
+
+    false ->
+      {"svn co", "svn co -q "++RepoUrl++" "++RepoName}
+  end,
+
+  InfoMap = #{ "URL" => RepoUrl },
+
+  Reply = os:cmd( Cmd ),
+
+  print_reply( RepoName, Action, InfoMap, Reply ).
+
 
 -spec svn_status( Prefix, Suffix ) -> ok
 when Prefix :: binary(),
      Suffix :: binary().
 
 svn_status( Prefix, Suffix ) ->
-  error( nyi ).
+  
+  RepoName = get_repo_name( Prefix, Suffix ),
+
+  Cmd = "(cd "++RepoName++" && svn status)",
+  Reply = os:cmd( Cmd ),
+  Action = "svn status",
+
+  case string:is_empty( Reply ) of
+    true -> ok;
+    false -> print_reply( RepoName, Action, #{}, Reply )
+  end.
 
 %% Helper functions --------------------------------------------------
 
@@ -251,20 +277,26 @@ when is_binary( Prefix ),
      is_binary( Suffix ) ->
   RepoUrl = string:join( [binary_to_list( Prefix ),
                           binary_to_list( Suffix )], "/" ),
-  [$/|RepoName] = string:find( RepoUrl, "/", trailing ),
-  RepoName.
+  NoTrunk = re:replace( RepoUrl, "/trunk", "", [global] ),
+  TrimmedEnd = string:trim( NoTrunk, trailing, "/" ),
+  Found = string:find( TrimmedEnd, "/", trailing ),
+  TrimmedFront = string:trim( Found, leading, "/" ),
+  binary_to_list( TrimmedFront ).
 
 
--spec get_repo_url( Prefix, Suffix ) -> string()
+
+-spec get_repo_url( Prefix, Suffix, Add ) -> string()
 when Prefix :: binary(),
-     Suffix :: binary().
+     Suffix :: binary(),
+     Add    :: binary().
 
-get_repo_url( Prefix, Suffix )
+get_repo_url( Prefix, Suffix, Add )
 when is_binary( Prefix ),
-     is_binary( Suffix ) ->
+     is_binary( Suffix ),
+     is_binary( Add ) ->
   RepoUrl0 = string:join( [binary_to_list( Prefix ),
                            binary_to_list( Suffix )], "/" ),
-  RepoUrl0++".git".
+  RepoUrl0++binary_to_list( Add ).
 
 
 %% Printing ----------------------------------------------------------
