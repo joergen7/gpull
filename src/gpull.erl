@@ -281,7 +281,10 @@ when is_binary( Prefix ),
   TrimmedEnd = string:trim( NoTrunk, trailing, "/" ),
   Found = string:find( TrimmedEnd, "/", trailing ),
   TrimmedFront = string:trim( Found, leading, "/" ),
-  binary_to_list( TrimmedFront ).
+  case is_binary( TrimmedFront ) of
+    true  -> binary_to_list( TrimmedFront );
+    false -> TrimmedFront
+  end.
 
 
 
