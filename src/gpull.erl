@@ -30,7 +30,8 @@
 
 -define( REPOINFO, "repo_info.json" ).
 -define( CLEAN_REPLY1, "nothing to commit, working tree clean" ).
--define( CLEAN_REPLY2, "Your branch is up to date with" ).
+-define( CLEAN_REPLY2A, "Your branch is up to date with" ).
+-define( CLEAN_REPLY2B, "Your branch is up-to-date with" ).
 
 -type repo_obj() :: #{ protocol  => binary(),
                        url       => binary(),
@@ -217,8 +218,12 @@ when is_binary( Prefix ),
 
     nomatch -> print_reply( RepoName, Action, #{}, Reply );
     _       ->
-      case string:find( Reply, ?CLEAN_REPLY2 ) of
-        nomatch -> print_reply( RepoName, Action, #{}, Reply );
+      case string:find( Reply, ?CLEAN_REPLY2A ) of
+        nomatch ->
+	      case string:find( Reply, ?CLEAN_REPLY2B ) of
+		  nomatch -> print_reply( RepoName, Action, #{}, Reply );
+		  _       -> ok
+	      end;
         _       -> ok
       end
   end.
