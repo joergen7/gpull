@@ -1,8 +1,6 @@
 # gpull
 ###### git repository management tool
 
-[![Build Status](https://travis-ci.org/joergen7/gpull.svg?branch=master)](https://travis-ci.org/joergen7/gpull)
-
 ## Usage
 
 ### Pulling Changes
