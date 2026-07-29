@@ -1,8 +1,8 @@
 %% -*- erlang -*-
 %%
-%% gpull: git repository management tool.
+%% gpull: repository management tool.
 %%
-%% Copyright 2017-2021 Jörgen Brandt <joergen@cuneiform-lang.org>
+%% Copyright 2017-2026 Jörgen Brandt <joergen@cuneiform-lang.org>
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 %%
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen@cuneiform-lang.org>
-%% @version 0.1.3
-%% @copyright 2017-2021
+%% @version 0.1.4
+%% @copyright 2017-2026
 %%
 %% @end
 %% -------------------------------------------------------------------
@@ -28,16 +28,13 @@
 
 -export([main/1]).
 
--define(REPOINFO,      "repo_info.json").
--define(CLEAN_REPLY1,  "nothing to commit, working tree clean").
--define(CLEAN_REPLY2A, "Your branch is up to date with").
--define(CLEAN_REPLY2B, "Your branch is up-to-date with").
+-include ("types.hrl").
 
--type repo_obj() :: #{
-                      protocol => binary(),
-                      url => binary(),
-                      repo_list => [binary()]
-                     }.
+-import (op_pull, [op_pull/2]).
+-import (op_status, [op_status/2]).
+-import (op_log, [op_log/2]).
+
+-define(REPOINFO,      "repo_info.json").
 
 %%====================================================================
 %% Escript main function
@@ -53,8 +50,10 @@ main(ArgLst)
 
     Op =
         case ArgLst of
-            [] -> pull;
-            ["status"] -> status
+            ["pull"]   -> pull;
+            ["status"] -> status;
+            ["log"]    -> log;
+            []         -> pull
         end,
 
     lists:foreach(fun(Repo) -> process_repo(Op, Repo) end, RepoInfo).
@@ -141,204 +140,30 @@ load_repo_info(InfoFile) when is_list(InfoFile) ->
 
 -spec process_repo(Op, M) -> ok
               when Op :: pull | status,
-                   M :: repo_obj().
+                   M  :: repo_obj().
 
 process_repo(Op, #{protocol := P, url := BaseUrl, repo_list := RepoLst}) ->
-    F = proc_repo(binary_to_atom(P, utf8), Op, BaseUrl),
+    F = proc_repo(Op, binary_to_atom(P, utf8), BaseUrl),
     lists:foreach(F, RepoLst).
 
 
--spec proc_repo(Protocol, Op, BaseUrl) -> fun((Repo :: binary()) -> ok)
-              when Protocol :: git | svn,
-                   Op :: pull | status,
-                   BaseUrl :: binary().
+-spec proc_repo(Op, Protocol, BaseUrl) -> fun((Repo :: binary()) -> ok)
+              when Op       :: operation(),
+                   Protocol :: protocol(),
+                   BaseUrl  :: binary().
 
-proc_repo(git, pull, BaseUrl) ->
-    fun(Repo) ->
-            git_pull(BaseUrl, Repo)
-    end;
+proc_repo(pull, Protocol, BaseUrl) ->
+    op_pull (Protocol, BaseUrl);
 
-proc_repo(git, status, BaseUrl) ->
-    fun(Repo) ->
-            git_status(BaseUrl, Repo)
-    end;
+proc_repo(status, Protocol, BaseUrl) ->
+    op_status (Protocol, BaseUrl);
 
-proc_repo(svn, pull, BaseUrl) ->
-    fun(Repo) ->
-            svn_up(BaseUrl, Repo)
-    end;
-
-proc_repo(svn, status, BaseUrl) ->
-    fun(Repo) ->
-            svn_status(BaseUrl, Repo)
-    end.
+proc_repo(log, Protocol, BaseUrl) ->
+    op_log (Protocol, BaseUrl).
 
 
-%% Repo operations ---------------------------------------------------
 
 
--spec git_pull(Prefix, Suffix) -> ok
-              when Prefix :: binary(),
-                   Suffix :: binary().
-
-git_pull(Prefix, Suffix)
-  when is_binary(Prefix),
-       is_binary(Suffix) ->
-
-    RepoName = get_repo_name(Prefix, Suffix),
-    RepoUrl = get_repo_url(Prefix, Suffix, <<".git">>),
-
-    {Action, Cmd} =
-        case filelib:is_dir(RepoName) of
-
-            true ->
-                {"git pull", "(cd " ++ RepoName ++ " && git pull)"};
-
-            false ->
-                {"git clone", "git clone " ++ RepoUrl ++ " && (cd " ++ RepoName ++ " && git config pull.rebase false)"}
-        end,
-
-    InfoMap = #{"URL" => RepoUrl},
-
-    Reply = os:cmd(Cmd),
-
-    print_reply(RepoName, Action, InfoMap, Reply).
 
 
--spec git_status(Prefix, Suffix) -> ok
-              when Prefix :: binary(),
-                   Suffix :: binary().
 
-git_status(Prefix, Suffix)
-  when is_binary(Prefix),
-       is_binary(Suffix) ->
-
-    RepoName = get_repo_name(Prefix, Suffix),
-
-    Cmd = "(cd " ++ RepoName ++ " && git status)",
-    Reply = os:cmd(Cmd),
-    Action = "git status",
-
-    case string:find(Reply, ?CLEAN_REPLY1) of
-
-        nomatch -> print_reply(RepoName, Action, #{}, Reply);
-        _ ->
-            case string:find(Reply, ?CLEAN_REPLY2A) of
-                nomatch ->
-                    case string:find(Reply, ?CLEAN_REPLY2B) of
-                        nomatch -> print_reply(RepoName, Action, #{}, Reply);
-                        _ -> ok
-                    end;
-                _ -> ok
-            end
-    end.
-
-
--spec svn_up(Prefix, Suffix) -> ok
-              when Prefix :: binary(),
-                   Suffix :: binary().
-
-svn_up(Prefix, Suffix) ->
-
-    RepoName = get_repo_name(Prefix, Suffix),
-    RepoUrl = get_repo_url(Prefix, Suffix, <<>>),
-
-    {Action, Cmd} =
-        case filelib:is_dir(RepoName) of
-
-            true ->
-                {"svn up", "(cd " ++ RepoName ++ " && svn up)"};
-
-            false ->
-                {"svn co", "svn co -q " ++ RepoUrl ++ " " ++ RepoName}
-        end,
-
-    InfoMap = #{"URL" => RepoUrl},
-
-    Reply = os:cmd(Cmd),
-
-    print_reply(RepoName, Action, InfoMap, Reply).
-
-
--spec svn_status(Prefix, Suffix) -> ok
-              when Prefix :: binary(),
-                   Suffix :: binary().
-
-svn_status(Prefix, Suffix) ->
-
-    RepoName = get_repo_name(Prefix, Suffix),
-
-    Cmd = "(cd " ++ RepoName ++ " && svn status)",
-    Reply = os:cmd(Cmd),
-    Action = "svn status",
-
-    case string:is_empty(Reply) of
-        true -> ok;
-        false -> print_reply(RepoName, Action, #{}, Reply)
-    end.
-
-
-%% Helper functions --------------------------------------------------
-
-
--spec get_repo_name(Prefix, Suffix) -> string()
-              when Prefix :: binary(),
-                   Suffix :: binary().
-
-get_repo_name(Prefix, Suffix)
-  when is_binary(Prefix),
-       is_binary(Suffix) ->
-    RepoUrl = string:join([binary_to_list(Prefix),
-                           binary_to_list(Suffix)],
-                          "/"),
-    NoTrunk = re:replace(RepoUrl, "/trunk", "", [global]),
-    TrimmedEnd = string:trim(NoTrunk, trailing, "/"),
-    Found = string:find(TrimmedEnd, "/", trailing),
-    TrimmedFront = string:trim(Found, leading, "/"),
-    case is_binary(TrimmedFront) of
-        true -> binary_to_list(TrimmedFront);
-        false -> TrimmedFront
-    end.
-
-
--spec get_repo_url(Prefix, Suffix, Add) -> string()
-              when Prefix :: binary(),
-                   Suffix :: binary(),
-                   Add :: binary().
-
-get_repo_url(Prefix, Suffix, Add)
-  when is_binary(Prefix),
-       is_binary(Suffix),
-       is_binary(Add) ->
-    RepoUrl0 = string:join([binary_to_list(Prefix),
-                            binary_to_list(Suffix)],
-                           "/"),
-    RepoUrl0 ++ binary_to_list(Add).
-
-
-%% Printing ----------------------------------------------------------
-
-
--spec print_info(K, V) -> ok
-              when K :: string(),
-                   V :: string().
-
-print_info(K, V) ->
-    io:format("~-8.s~s~n", [K ++ ":", V]).
-
-
--spec print_reply(RepoName, Action, InfoMap, Reply) -> ok
-              when RepoName :: string(),
-                   Action :: string(),
-                   InfoMap :: #{string() => string()},
-                   Reply :: string().
-
-print_reply(RepoName, Action, InfoMap, Reply)
-  when is_list(RepoName),
-       is_list(Reply) ->
-    io:format("=====================================~n"),
-    io:format("repo:   ~s~n", [RepoName]),
-    io:format("action: ~s~n", [Action]),
-    lists:foreach(fun({K, V}) -> print_info(K, V) end,
-                  maps:to_list(InfoMap)),
-    io:put_chars(Reply).
